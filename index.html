@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Práctica MindAR · Dos marcadores</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:system-ui,sans-serif;background:transparent}
+a-scene {position:fixed!important;inset:0!important;width:100%!important;height:100%!important;}
+.a-canvas {background:transparent!important;}
+#hud{position:fixed;z-index:20;top:12px;left:12px;right:12px;padding:12px 15px;background:#10151edb;color:white;border:1px solid #ffffff33;border-radius:13px;pointer-events:none}
+#hud strong{display:block;color:#ffe0a0}#estado{font-size:14px;margin-top:5px}
+#footer{position:fixed;z-index:20;bottom:16px;left:12px;right:12px;text-align:center;color:#fff;background:#10151eb9;padding:10px;border-radius:12px;pointer-events:none;font-size:13px}
+</style>
+</head>
+<body>
+<div id="hud"><strong>🎄 Laboratorio MindAR · Profe Mak</strong><div id="estado">Iniciando cámara… Autoriza el permiso y apunta al marcador.</div></div>
+<div id="footer">Marcador 1: estrella dorada · Marcador 2: esfera azul</div>
+<a-scene mindar-image="imageTargetSrc: ./targets.mind; maxTrack: 2;" color-space="sRGB" renderer="colorManagement: true; alpha: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+<a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+<!-- Marcador 1: estrella dorada. targetIndex 0 = primera imagen compilada -->
+<a-entity id="target0" mindar-image-target="targetIndex: 0">
+ <a-ring radius-inner="0.32" radius-outer="0.35" color="#ffcd56" position="0 0 0.015" animation="property: rotation; to: 0 0 360; dur: 8000; loop: true; easing: linear"></a-ring>
+ <a-dodecahedron position="0 0 0.22" radius="0.20" color="#ffce45" metalness="0.2" roughness="0.4" animation="property: rotation; to: 0 360 360; dur: 5000; easing: linear; loop: true"></a-dodecahedron>
+ <a-text value="ESTRELLA DE BELEN" align="center" color="#fff5ce" width="1.8" position="0 -0.43 0.08"></a-text>
+</a-entity>
+<!-- Marcador 2: esfera azul. targetIndex 1 = segunda imagen compilada -->
+<a-entity id="target1" mindar-image-target="targetIndex: 1">
+ <a-torus position="0 0 0.10" radius="0.29" radius-tubular="0.018" color="#6fe3ff" rotation="75 0 0" animation="property: rotation; to: 75 360 0; dur: 5500; easing: linear; loop: true"></a-torus>
+ <a-sphere position="0 0 0.22" radius="0.19" color="#35adf5" roughness="0.35" animation="property: position; from: 0 0 0.15; to: 0 0 0.32; dur: 1200; dir: alternate; loop: true; easing: easeInOutSine"></a-sphere>
+ <a-text value="MUNDO SALESIANO" align="center" color="#e0f8ff" width="1.7" position="0 -0.43 0.08"></a-text>
+</a-entity>
+</a-scene>
+<script>
+const estado=document.getElementById('estado');
+const activos=new Set();
+const escena=document.querySelector('a-scene');
+escena.addEventListener('arReady',()=>{estado.textContent='Motor AR listo. Si no ves la cámara, revisa permisos y diagnóstico.'; setTimeout(()=>{const videos=[...document.querySelectorAll('video')]; const live=videos.find(v=>v.videoWidth>0); if (live) {estado.textContent='Cámara activa ('+live.videoWidth+'×'+live.videoHeight+'). Apunta a los marcadores.';} else {estado.textContent='Motor AR iniciado, pero no se detecta video activo. Revisa cámara, permisos y consola.';}},2500);});
+escena.addEventListener('arError',()=>{estado.textContent='Error al iniciar AR: comprueba HTTPS, permiso de cámara y targets.mind.';});
+window.addEventListener('error',e=>{console.error('Error MindAR:',e.message);});
+['target0','target1'].forEach((id,i)=>{
+ const el=document.getElementById(id);
+ el.addEventListener('targetFound',()=>{activos.add(i+1);estado.textContent='Detectados: '+[...activos].join(', ')});
+ el.addEventListener('targetLost',()=>{activos.delete(i+1);estado.textContent=activos.size?'Detectados: '+[...activos].join(', '):'Marcador perdido. Vuelve a enfocarlo.'});
+});
+</script>
+</body>
+</html>
