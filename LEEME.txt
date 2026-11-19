@@ -1,0 +1,17 @@
+PRACTICA MINDAR — PROFE MAK
+============================
+1. Abre la carpeta marcadores: imprime marcador_1.png y marcador_2.png.
+2. Abre https://hiukim.github.io/mind-ar-js-doc/tools/compile/
+3. Carga marcador_1.png PRIMERO y marcador_2.png SEGUNDO, compila y descarga targets.mind.
+4. Coloca targets.mind junto a index.html (raiz de esta carpeta).
+5. Publica la carpeta en un servidor HTTPS, por ejemplo GitHub Pages o Netlify Drop.
+6. En el celular abre la URL HTTPS, acepta la cámara y apunta a las tarjetas.
+7. Verás una figura dorada sobre marcador 1 y una esfera azul sobre marcador 2.
+
+IMPORTANTE:
+- El archivo targets.mind NO viene incluido porque debe generarse en el compilador.
+- No basta abrir index.html con doble clic (file://).
+- Live Server en tu PC sirve para pruebas locales; en el celular usa una URL HTTPS publicada.
+- Si cambias las imágenes, recompila targets.mind respetando el orden.
+- Requiere Internet para descargar A-Frame y MindAR desde CDN.
+Documentación oficial: https://hiukim.github.io/mind-ar-js-doc/
