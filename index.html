@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#081425">
+  <title>Cardboard Lab · Three.js</title>
+  <style>
+    *{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#081425;color:#fff;font-family:Arial,Helvetica,sans-serif}
+    canvas{display:block;touch-action:none} #scene{position:fixed;inset:0}
+    #hud{position:fixed;left:16px;top:16px;max-width:390px;padding:18px;background:rgba(5,17,35,.88);border:1px solid #275c75;border-radius:16px;backdrop-filter:blur(10px);z-index:4;box-shadow:0 12px 40px #0006}
+    h1{font-size:23px;margin:0 0 8px} .eyebrow{color:#70edfa;font-size:12px;font-weight:700;letter-spacing:2px} p{color:#c8d9e8;font-size:13px;line-height:1.5} .buttons{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
+    button{background:#0bb4c6;color:#001927;border:0;border-radius:9px;padding:11px 13px;font-size:13px;font-weight:700;cursor:pointer}button.secondary{background:#243955;color:#eafaff;border:1px solid #53748c}
+    #status{font-size:12px;color:#ffda88;margin-top:12px;min-height:15px}#exit{display:none;position:fixed;right:12px;top:12px;z-index:10;background:#142840;color:white;border:1px solid #63e6f4;padding:9px 13px}#crosshair{display:none;position:fixed;left:50%;top:50%;z-index:2;color:#8de9f8;transform:translate(-50%,-50%);pointer-events:none}
+    body.cardboard #hud{display:none}body.cardboard #exit{display:block}body.cardboard #crosshair{display:block}
+    @media(max-width:540px){#hud{left:10px;right:10px;top:10px;max-width:unset;padding:14px}h1{font-size:20px}}
+  </style>
+  <script type="importmap">
+  {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}
+  </script>
+</head>
+<body>
+  <div id="scene"></div>
+  <section id="hud">
+    <div class="eyebrow">UPS · DISEÑO MULTIMEDIA · DEMO WEB VR</div>
+    <h1>Cardboard Lab <span style="color:#70edfa">✦</span></h1>
+    <p>Un pequeño museo virtual con figuras geométricas. Mira alrededor y explóralo con tus Google Cardboard.</p>
+    <div class="buttons">
+      <button id="cardboard">🥽 Entrar a Cardboard</button>
+      <button id="webxr" class="secondary">🌐 WebXR (visor compatible)</button>
+    </div>
+    <p>En PC: arrastra para mirar. En el móvil: usa orientación y gira la cabeza. El modo Cardboard divide la pantalla incluso si WebXR no está disponible.</p>
+    <div id="status" role="status">Cargando escena 3D…</div>
+  </section>
+  <button id="exit" aria-label="Salir de Cardboard">✕ Salir</button>
+  <div id="crosshair">·</div>
+  <script type="module">
+    import * as THREE from 'three';
+    const status=document.getElementById('status');
+    const scene=new THREE.Scene();scene.background=new THREE.Color('#081425');scene.fog=new THREE.Fog('#081425',9,22);
+    const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.05,100);
+    camera.position.set(0,1.65,0);
+    const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);
+    renderer.xr.enabled=true;renderer.xr.setReferenceSpaceType('local-floor');
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    document.getElementById('scene').appendChild(renderer.domElement);
+    scene.add(new THREE.HemisphereLight(0x9de9ff,0x14243c,2.1));
+    const light=new THREE.PointLight(0x55dff7,50,12);light.position.set(0,3,-3);scene.add(light);
+    const floor=new THREE.Mesh(new THREE.PlaneGeometry(24,24),new THREE.MeshStandardMaterial({color:0x101f31,roughness:.8}));floor.rotation.x=-Math.PI/2;scene.add(floor);
+    const grid=new THREE.GridHelper(24,24,0x206e83,0x1c4056);grid.position.y=.008;scene.add(grid);
+    function pedestal(x,z){const m=new THREE.Mesh(new THREE.CylinderGeometry(.54,.62,.23,40),new THREE.MeshStandardMaterial({color:0x203954,metalness:.35,roughness:.3}));m.position.set(x,.15,z);scene.add(m);return m}
+    const objects=[];
+    function exhibit(geo,color,x,z){pedestal(x,z);const o=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color,metalness:.2,roughness:.28,emissive:color,emissiveIntensity:.13}));o.position.set(x,1.17,z);scene.add(o);objects.push(o);return o}
+    exhibit(new THREE.BoxGeometry(.9,.9,.9),0x4de4f6,-2.2,-4.3);
+    exhibit(new THREE.SphereGeometry(.65,32,24),0xffce68,0,-4.3);
+    exhibit(new THREE.ConeGeometry(.68,1.3,5),0xb78bff,2.2,-4.3);
+    const torus=exhibit(new THREE.TorusGeometry(.55,.16,14,56),0x62e9aa,0,-7);torus.rotation.x=.45;
+    // A visible sign, independent of external fonts or models
+    const signCanvas=document.createElement('canvas');signCanvas.width=768;signCanvas.height=168;
+    const sctx=signCanvas.getContext('2d');sctx.fillStyle='#112c43';sctx.fillRect(0,0,768,168);
+    sctx.strokeStyle='#54e2ef';sctx.lineWidth=8;sctx.strokeRect(8,8,752,152);
+    sctx.textAlign='center';sctx.fillStyle='#ffffff';sctx.font='bold 57px Arial';sctx.fillText('CARDBOARD LAB',384,75);
+    sctx.fillStyle='#82eff8';sctx.font='30px Arial';sctx.fillText('THREE.JS · REALIDAD VIRTUAL',384,125);
+    const sign=new THREE.Mesh(new THREE.PlaneGeometry(3.8,.84),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(signCanvas),side:THREE.DoubleSide}));sign.position.set(0,3,-4.7);scene.add(sign);
+    // Manual stereoscopic Cardboard, independent of WebXR immersive-vr support.
+    const stereo=new THREE.StereoCamera();stereo.eyeSep=.064;
+    const euler=new THREE.Euler(),q1=new THREE.Quaternion(-Math.sqrt(.5),0,0,Math.sqrt(.5)),q0=new THREE.Quaternion(),zAxis=new THREE.Vector3(0,0,1);
+    let cardboard=false,orientationAvailable=false,alpha=null,beta=0,gamma=0;
+    let yaw=0,pitch=0,drag=false,lastX=0,lastY=0;
+    window.addEventListener('deviceorientation',ev=>{if(ev.alpha!==null){alpha=ev.alpha;beta=ev.beta||0;gamma=ev.gamma||0;orientationAvailable=true}},{passive:true});
+    function sensorQuaternion(){const orient=((screen.orientation&&screen.orientation.angle)||window.orientation||0)*Math.PI/180;
+      euler.set(THREE.MathUtils.degToRad(beta),THREE.MathUtils.degToRad(alpha),-THREE.MathUtils.degToRad(gamma),'YXZ');
+      camera.quaternion.setFromEuler(euler).multiply(q1).multiply(q0.setFromAxisAngle(zAxis,-orient));}
+    renderer.domElement.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;lastY=e.clientY});
+    window.addEventListener('pointerup',()=>drag=false);
+    window.addEventListener('pointermove',e=>{if(!drag||cardboard&&orientationAvailable)return;yaw-=(e.clientX-lastX)*.004;pitch-=(e.clientY-lastY)*.004;pitch=THREE.MathUtils.clamp(pitch,-1.4,1.4);lastX=e.clientX;lastY=e.clientY});
+    function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+    window.addEventListener('resize',resize);
+    async function enterCardboard(){
+      // Permission request must occur synchronously from user gesture on Safari/iOS.
+      try{if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+        const grant=await DeviceOrientationEvent.requestPermission();if(grant!=='granted')status.textContent='Permiso de movimiento denegado. Puedes mirar arrastrando.';
+      }}catch(err){status.textContent='No se pudo activar el sensor: '+err.message}
+      cardboard=true;document.body.classList.add('cardboard');
+      if(document.documentElement.requestFullscreen){try{await document.documentElement.requestFullscreen()}catch(e){/* optional */}}
+      if(screen.orientation&&screen.orientation.lock){try{await screen.orientation.lock('landscape')}catch(e){/* optional */}}
+    }
+    function exitCardboard(){cardboard=false;document.body.classList.remove('cardboard');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});if(screen.orientation&&screen.orientation.unlock){try{screen.orientation.unlock()}catch(e){}}}
+    document.getElementById('cardboard').addEventListener('click',enterCardboard);
+    document.getElementById('exit').addEventListener('click',exitCardboard);
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')exitCardboard()});
+    document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&cardboard){/* Keep split-screen; browser may decline fullscreen */}});
+    document.getElementById('webxr').addEventListener('click',async()=>{
+      if(!navigator.xr){status.textContent='Este navegador no ofrece WebXR; usa «Entrar a Cardboard».';return}
+      try{const supported=await navigator.xr.isSessionSupported('immersive-vr');if(!supported){status.textContent='El dispositivo no admite immersive-vr. Usa el modo Cardboard.';return}
+        const session=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['local-floor','bounded-floor']});
+        await renderer.xr.setSession(session);status.textContent='WebXR activo.';
+      }catch(e){status.textContent='No se pudo iniciar WebXR: '+e.message}
+    });
+    const clock=new THREE.Clock();renderer.setAnimationLoop(()=>{
+      const dt=clock.getDelta();objects.forEach((o,i)=>{o.rotation.y+=dt*(.25+i*.09)});
+      if(!renderer.xr.isPresenting){
+        if(cardboard&&orientationAvailable){sensorQuaternion()}else{camera.rotation.order='YXZ';camera.rotation.y=yaw;camera.rotation.x=pitch;camera.rotation.z=0}
+        if(cardboard){const w=renderer.domElement.width,h=renderer.domElement.height;
+          camera.aspect=(w/2)/h;camera.updateProjectionMatrix();camera.updateMatrixWorld();stereo.update(camera);
+          renderer.setScissorTest(true);renderer.setViewport(0,0,w/2,h);renderer.setScissor(0,0,w/2,h);renderer.render(scene,stereo.cameraL);
+          renderer.setViewport(w/2,0,w/2,h);renderer.setScissor(w/2,0,w/2,h);renderer.render(scene,stereo.cameraR);
+          renderer.setScissorTest(false);
+        }else{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setViewport(0,0,renderer.domElement.width,renderer.domElement.height);renderer.render(scene,camera)}
+      }else renderer.render(scene,camera);
+    });
+    status.textContent='Escena lista. Prueba Cardboard o WebXR.';
+  </script>
+</body>
+</html>
